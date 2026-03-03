@@ -1,0 +1,1141 @@
+---
+title: "Projeto Bellabeat"
+output: html_document
+date: "2026-01-20"
+---
+
+# INTRODUÇÃO ----
+
+## Sobre uma empresa
+Bellabeat, fabricante de alta tecnologia de produtos voltados para a saúde feminina. Bellabeat é uma pequena empresa de sucesso, mas tem potencial para se tornar um player maior no mercado global de dispositivos inteligentes. Urška Sršen, cofundadora e diretora de criação da Bellabeat, acredita que a análise de dados de condicionamento físico de dispositivos inteligentes pode ajudar a desbloquear novas oportunidades de crescimento para a empresa.
+
+## Perguntas para a análise
+Quais são algumas tendências no uso de dispositivos inteligentes?
+Como essas tendências poderiam se aplicar aos clientes da Bellabeat?
+Como essas tendências poderiam ajudar a influenciar a estratégia de marketing da Bellabeat?
+
+## Período analisado: 12/03/2016 à 12/05/2016
+
+
+# PACOTES ----
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+# IMPORTAÇÃO ----
+
+## Importação Periodo 12/03/2016 à 12/04/2016
+```{r df}
+df_raw_atividade_diaria <- read.csv("dados_periodo_2016_03_12_a_2016_04_11/atividade_diaria.csv")
+df_raw_calorias_horarias <- read.csv("dados_periodo_2016_03_12_a_2016_04_11/calorias_horarias.csv")
+df_raw_intensidade_horaria <- read.csv("dados_periodo_2016_03_12_a_2016_04_11/intensidade_horaria.csv")
+df_raw_passos_horarios <- read.csv("dados_periodo_2016_03_12_a_2016_04_11/passos_horarios.csv")
+df_raw_peso_usuarios <- read.csv("dados_periodo_2016_03_12_a_2016_04_11/peso_usuarios.csv")
+```
+
+
+## Importação Periodo 12/04/2016 à 12/05/2016
+```{r df_b}
+df_raw_atividade_diaria_b <- read.csv("dados_periodo_2016_04_12_a_2016_05_12/atividade_diaria_b.csv")
+df_raw_calorias_horarias_b <- read.csv("dados_periodo_2016_04_12_a_2016_05_12/calorias_horarias_b.csv")
+df_raw_intensidade_horaria_b <- read.csv("dados_periodo_2016_04_12_a_2016_05_12/intensidade_horaria_b.csv")
+df_raw_passos_horarios_b <- read.csv("dados_periodo_2016_04_12_a_2016_05_12/passos_horarios_b.csv")
+df_raw_peso_usuarios_b <- read.csv("dados_periodo_2016_04_12_a_2016_05_12/peso_usuarios_b.csv")
+df_raw_sono_diario_b <- read.csv("dados_periodo_2016_04_12_a_2016_05_12/sono_diario_b.csv")
+```
+
+
+
+# TRATAMENTO DOS DADOS ----
+
+## Unindo as tabelas
+```{r df_stage_atividade}
+df_stage_atividade <- bind_rows(
+  df_raw_atividade_diaria,
+  df_raw_atividade_diaria_b
+)
+```
+
+
+```{r df_stage_calorias_h}
+df_stage_calorias_h <- bind_rows(
+  df_raw_calorias_horarias,
+  df_raw_calorias_horarias_b
+)
+```
+
+
+```{r df_stage_intensidade_h}
+df_stage_intensidade_h <- bind_rows(
+  df_raw_intensidade_horaria,
+  df_raw_intensidade_horaria_b
+)
+```
+
+
+```{r df_stage_passos_h}
+df_stage_passos_h <- bind_rows(
+  df_raw_passos_horarios,
+  df_raw_passos_horarios_b
+)
+```
+
+
+```{r df_stage_peso}
+df_stage_peso <- bind_rows(
+  df_raw_peso_usuarios,
+  df_raw_peso_usuarios_b
+)
+```
+
+
+
+## Trocando nomes das colunas
+```{r df_stage_atividade}
+df_stage_atividade <- df_stage_atividade %>%
+  rename(
+    id_usuario = Id,
+    data = ActivityDate,
+    total_passos = TotalSteps,
+    distancia_total = TotalDistance,
+    distancia_rastreador = TrackerDistance,
+    distancia_atividades_registradas = LoggedActivitiesDistance,
+    distancia_alta_ativa = VeryActiveDistance,
+    distancia_moderada_ativa = ModeratelyActiveDistance,
+    distancia_leve_ativa = LightActiveDistance,
+    distancia_sedentaria_ativa = SedentaryActiveDistance,
+    minutos_muito_ativos = VeryActiveMinutes,
+    minutos_moderadamente_ativos = FairlyActiveMinutes,
+    minutos_levemente_ativos = LightlyActiveMinutes,
+    minutos_sedentarios = SedentaryMinutes,
+    calorias = Calories
+  )
+```
+
+
+```{r df_stage_calorias_h}
+df_stage_calorias_h <- df_stage_calorias_h %>%
+  rename(
+    id_usuario = Id,
+    hora_da_atividade = ActivityHour,
+    calorias = Calories
+  )
+```
+
+
+```{r df_stage_intensidade_h}
+df_stage_intensidade_h <- df_stage_intensidade_h %>%
+  rename(
+    id_usuario = Id,
+    hora_da_atividade = ActivityHour,
+    intensidade_total = TotalIntensity,
+    intensidade_media = AverageIntensity
+  )
+```
+
+
+```{r df_stage_passos_h}
+df_stage_passos_h <- df_stage_passos_h %>%
+  rename(
+    id_usuario = Id,
+    hora_da_atividade = ActivityHour,
+    total_passos = StepTotal
+  )
+```
+
+
+```{r df_stage_peso}
+df_stage_peso <- df_stage_peso %>%
+  rename(
+    id_usuario = Id,
+    data = Date,
+    peso_em_kg = WeightKg,
+    peso_em_libras = WeightPounds,
+    gordura = Fat,
+    IMC = BMI,
+    relatótio_manual = IsManualReport,
+    id_do_registro = LogId
+  )
+```
+
+
+```{r df_stage_sono_diario}
+df_stage_sono_diario <- df_raw_sono_diario_b %>%
+  rename(
+    id_usuario = Id,
+    data = SleepDay,
+    total_registro_sono = TotalSleepRecords,
+    total_minutos_dormidos = TotalMinutesAsleep,
+    total_tempo_na_cama = TotalTimeInBed
+  )
+```
+
+
+
+## Validação dos tipos de dados e identificação de valores nulos
+```{r glimpse_df_stage_atividade}
+glimpse(df_stage_atividade)
+```
+
+
+```{r glimpse_df_stage_calorias_h}
+glimpse(df_stage_calorias_h)
+```
+
+
+```{r glimpse_df_stage_intensidade_h}
+glimpse(df_stage_intensidade_h)
+```
+
+
+```{r glimpse_df_stage_passos_h}
+glimpse(df_stage_passos_h)
+```
+
+
+```{r glimpse_df_stage_peso}
+glimpse(df_stage_peso)
+```
+
+
+```{r glimpse_df_stage_sono_diario}
+glimpse(df_stage_sono_diario)
+```
+
+
+```{r anyNA_df_stage_atividade}
+anyNA(df_stage_atividade)
+colSums(is.na(df_stage_atividade))
+```
+
+
+```{r anyNA_df_stage_calorias_h}
+anyNA(df_stage_calorias_h)
+colSums(is.na(df_stage_calorias_h))
+```
+
+
+```{r anyNA_df_stage_intensidade_h}
+anyNA(df_stage_intensidade_h)
+colSums(is.na(df_stage_intensidade_h))
+```
+
+
+```{r anyNA_df_stage_passos_h}
+anyNA(df_stage_passos_h)
+colSums(is.na(df_stage_passos_h))
+```
+
+
+```{r anyNA_df_stage_peso}
+anyNA(df_stage_peso)
+colSums(is.na(df_stage_peso))
+```
+
+
+```{r anyNA_df_stage_sono_diario}
+anyNA(df_stage_sono_diario)
+colSums(is.na(df_stage_sono_diario))
+```
+
+
+
+## Removendo data frames que já foram unificados
+```{r rm()}
+rm(df_raw_atividade_diaria)
+rm(df_raw_atividade_diaria_b)
+rm(df_raw_calorias_horarias)
+rm(df_raw_calorias_horarias_b)
+rm(df_raw_intensidade_horaria)
+rm(df_raw_intensidade_horaria_b)
+rm(df_raw_passos_horarios)
+rm(df_raw_passos_horarios_b)
+rm(df_raw_peso_usuarios)
+rm(df_raw_peso_usuarios_b)
+rm(df_raw_sono_diario_b)
+```
+
+
+## Alteração de chr para date
+```{r}
+df_stage_atividade$data <-
+  as.POSIXct(df_stage_atividade$data, 
+             format = "%m/%d/%Y")
+
+df_stage_calorias_h$hora_da_atividade <-
+  as.POSIXct(df_stage_calorias_h$hora_da_atividade,
+             format = "%m/%d/%Y %I:%M:%S %p")
+
+df_stage_intensidade_h$hora_da_atividade <-
+  as.POSIXct(df_stage_intensidade_h$hora_da_atividade,
+             format = "%m/%d/%Y %I:%M:%S %p")
+
+df_stage_passos_h$hora_da_atividade <-
+  as.POSIXct(df_stage_passos_h$hora_da_atividade,
+             format = "%m/%d/%Y %I:%M:%S %p")
+
+df_stage_peso$data <-
+  as.POSIXct(df_stage_peso$data,
+             format = "%m/%d/%Y %I:%M:%S %p")
+
+df_stage_sono_diario$data <-
+  as.POSIXct(df_stage_sono_diario$data,
+             format = "%m/%d/%Y %I:%M:%S %p")
+```
+
+
+## Alterando num para chr
+```{r}
+df_stage_peso$id_do_registro <- 
+  as.character(df_stage_peso$id_do_registro, format = "chr")
+```
+
+
+
+
+
+# ANÁLISE EXPLORATÓRIA ----
+
+## Qtd. de usuárias usando a função de atividade física
+```{r df_stage_atividade}
+n_distinct(df_stage_atividade$id_usuario)
+```
+
+
+## Qtd. de usuárias usando a função de calorias
+```{r df_stage_calorias_h}
+n_distinct(df_stage_calorias_h$id_usuario)
+```
+
+
+## Qtd. de usuárias usando a função de intensidade
+```{r df_stage_intensidade_h}
+n_distinct(df_stage_intensidade_h$id_usuario)
+```
+
+
+## Qtd. de usuárias usando a função de contagem de passos
+```{r df_stage_passos_h}
+n_distinct(df_stage_passos_h$id_usuario)
+```
+
+
+## Qtd. de usuárias usando a função de registro de peso
+```{r df_stage_peso}
+n_distinct(df_stage_peso$id_usuario)
+```
+
+
+## Qtd. de usuárias usando a função de registro de sono
+```{r df_stage_sono_diario}
+n_distinct(df_stage_sono_diario$id_usuario)
+```
+
+
+## Validação do range de datas para validar se a unidão das tabelas de dois períodos foi bem sucedida
+```{r range_df_stage_atividade}
+range(as.Date(df_stage_atividade$data))
+```
+
+
+
+# ANÁLISE ESTATISTICA DESCRITIVA ----
+
+```{r df_stage_atividade}
+df_stage_atividade %>%
+  select(
+    total_passos,
+    distancia_total,
+    minutos_sedentarios,
+    calorias
+  ) %>%
+  summary()
+```
+
+
+```{r df_stage_calorias_h}
+df_stage_calorias_h %>%
+  select(
+    calorias
+  ) %>%
+  summary()
+```
+
+
+```{r df_stage_passos_h}
+df_stage_passos_h %>%
+  select(
+    total_passos
+  ) %>%
+  summary()
+```
+
+
+```{r df_stage_sono_diario}
+df_stage_sono_diario %>%
+  select(
+    total_registro_sono,
+    total_minutos_dormidos,
+    total_tempo_na_cama
+  ) %>%
+  summary()
+```
+
+
+```{r df_stage_peso}
+df_stage_peso %>%
+  select(
+    peso_em_kg,
+    IMC
+  ) %>%
+  summary()
+```
+
+
+# MÉTRICAS ----
+
+## Joins e dataframes resumo
+
+## Agregando total de passos por usuária
+```{r}
+df_metric_total_passos_usuario <- df_stage_atividade %>%
+  group_by(id_usuario) %>%
+  summarise(total_passos = sum(total_passos, na.rm = TRUE)) %>%
+  arrange(desc(total_passos))
+```
+
+
+## TOP 5 usuárias com maior número de passos
+```{r}
+df_metric_top_5_total_passos <- df_stage_atividade %>%
+  group_by(id_usuario) %>%
+  summarise(total_passos = sum(total_passos, na.rm = TRUE)) %>%
+  arrange(desc(total_passos)) %>%
+  slice_head(n = 5)
+```
+
+
+## TOP 5 usuárias com menor número de passos
+```{r}
+df_metric_top_5_menor_total_passos <- df_stage_atividade %>%
+  group_by(id_usuario) %>%
+  summarise(total_passos = sum(total_passos, na.rm = TRUE)) %>%
+  arrange(total_passos) %>%
+  slice_head(n = 5)
+```
+
+
+## Agregação média colunas da tabela df_stage_atividade
+```{r}
+df_metric_media_atividade <- df_stage_atividade %>%
+  group_by(id_usuario) %>%
+  summarise(
+    media_passos_dia = round(mean(total_passos, na.rm = TRUE)),
+    media_calorias_dia = round(mean(calorias, na.rm = TRUE)),
+    media_minu_ativo_dia = round(mean(minutos_muito_ativos, na.rm = TRUE)),
+    media_minu_sedentario_dia = round(mean(minutos_sedentarios, na.rm = TRUE))
+  ) %>%
+  arrange(desc(media_passos_dia))
+```
+
+
+## Média de passos por hora agrupada por usuária
+```{r}
+df_metric_media_passos_hora <- df_stage_passos_h %>%
+  group_by(id_usuario) %>%
+  summarise(
+    media_passos_h = round(mean(total_passos, na.rm = TRUE))
+  ) %>%
+  arrange(desc(media_passos_h))
+```
+
+
+## Média de minutos de sono e na cama e criação de 2 colunas convertendo minutos em hora
+```{r}
+df_metric_media_sono <- df_stage_sono_diario %>%
+  group_by(id_usuario) %>%
+  summarise(
+    media_minutos_sono = round(mean(total_minutos_dormidos, na.rm = TRUE)),
+    media_minutos_cama = round(mean(total_tempo_na_cama, na.rm = TRUE)),
+    media_hora_sono = round(media_minutos_sono/60),
+    media_hora_cama = round(media_minutos_cama/60)
+  ) %>%
+  arrange(desc(media_hora_sono))
+```
+
+
+## Categorizando a qualidade do sono com base no tempo médio de sono em horas
+```{r}
+df_metric_classificacao_do_sono <- df_metric_media_sono %>%
+  mutate(faixa_sono = case_when(
+    media_hora_sono < 5 ~ "Sono insuficiente",
+    media_hora_sono < 6 ~ "Sono curto",
+    media_hora_sono < 7 ~ "Sono regular",
+    media_hora_sono < 9 ~ "Sono adequado",
+    TRUE ~ "Sono prolongado"
+  )) %>%
+  count(faixa_sono)
+```
+
+
+## Criando df para cruzamento de dados e analise de correlação entre minutos em atividade fisic. vs sono
+```{r}
+df_metric_sono_minut_ativo <- df_metric_media_sono %>%
+  inner_join(df_metric_media_atividade, by = "id_usuario") %>%
+  arrange(desc(media_hora_sono))
+```
+
+
+## Média de gasto calórico hora por usuária
+```{r}
+df_metric_calorias_usuario <- df_stage_calorias_h %>%
+  group_by(id_usuario) %>%
+  summarise(
+    media_calorias_h = round(mean(calorias, na.rm = TRUE))
+  ) %>%
+  arrange(desc(media_calorias_h))
+```
+
+
+## Média de intensidade hora por usuária
+```{r}
+df_metric_intensidade_usuario <- df_stage_intensidade_h %>%
+  group_by(id_usuario) %>%
+  summarise(
+    media_intensidade = round(mean(intensidade_total, na.rm = TRUE))
+  ) %>%
+  arrange(desc(media_intensidade))
+```
+
+
+## Criando df para cruzamento de dados e analise de correlação entre intensidade vs gasto calórico
+```{r}
+df_metric_calorias_intensidade <- df_metric_calorias_usuario %>%
+  inner_join(df_metric_intensidade_usuario, by = "id_usuario")
+```
+
+
+## Agregação de dias ativos no app por usuária
+```{r}
+df_metric_dias_ativos_por_usuario <- df_stage_atividade %>%
+  group_by(id_usuario) %>%
+  summarise(
+    dias_ativos_usuario = n_distinct(data)
+  ) %>%
+  arrange(desc(dias_ativos_usuario))
+```
+
+
+## Criação de faixas de dias ativos
+```{r}
+df_metric_dias_ativos_faixa <- df_metric_dias_ativos_por_usuario %>%
+  mutate(faixa_dias = case_when(
+    dias_ativos_usuario <= 38 ~ "Baixo engajamento",
+    dias_ativos_usuario <= 42 ~ "Médio engajamento",
+    TRUE ~ "Alto engajamento"
+  )) %>%
+  count(faixa_dias) %>%
+  arrange(desc(n))
+```
+
+
+## Classificação dos tipos de usuárias
+```{r}
+df_metric_tipos_de_usuarios <- df_metric_media_atividade %>%
+  mutate(
+    perfil_usuario = case_when(
+      media_passos_dia < 5000 ~ "Sedentário",
+      media_passos_dia < 7500 ~ "Pouco ativo",
+      media_passos_dia < 10000 ~ "Moderadamente ativo",
+      TRUE ~ "Muito ativo"
+    )
+  )
+```
+
+
+## Representação em % dos tipos de usuárias
+```{r}
+df_metric_percent_perfil_usuarios <- df_metric_tipos_de_usuarios %>%
+  group_by(perfil_usuario) %>%
+  summarise(
+    qtd_usuarios = n_distinct(id_usuario),
+  ) %>%
+  mutate(
+    percentual = round(qtd_usuarios / sum(qtd_usuarios) * 100, 1)
+  ) %>%
+  arrange(desc(qtd_usuarios))
+```
+
+
+
+## Méticas de peso e IMC
+```{r}
+df_metric_peso_imc <- df_stage_peso %>%
+  group_by(id_usuario) %>%
+  summarise(
+    peso_em_kg = round(mean(peso_em_kg, na.rm = TRUE), 2),
+    IMC = round(mean(IMC, na.rm = TRUE), 2)
+  ) %>%
+  mutate(
+    classificacao = case_when(
+      IMC < 18.5 ~ "Abaixo do peso",
+      IMC < 24.9 ~ "Peso normal",
+      IMC < 29.9 ~ "Sobrepeso",
+      IMC > 30 ~ "Obesidade"
+  )) %>%
+  arrange(desc(IMC))
+```
+
+
+## Percentual IMC
+```{r}
+df_metric_percent_imc <- df_metric_peso_imc %>%
+  group_by(classificacao) %>%
+  summarise(
+    total_usuarios = n_distinct(id_usuario)
+  ) %>%
+  mutate(
+    percentual = round(total_usuarios / sum(total_usuarios) * 100, 1)
+  ) %>%
+  arrange(desc(percentual))
+```
+
+
+
+# VISUALIZAÇÕES ----
+
+
+## Distribuição de Usuárias por Perfil de Atividade
+```{r}
+ggplot(
+  df_metric_percent_perfil_usuarios,
+  aes(
+    x = reorder(perfil_usuario, -qtd_usuarios),
+    y = qtd_usuarios,
+    fill = perfil_usuario == "Sedentário"
+  )) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = qtd_usuarios), vjust = -0.4, size = 4) +
+  scale_fill_manual(
+    values = c("TRUE" = "#D4D32B", "FALSE" = "grey70"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Distribuição de Usuárias por Perfil de Atividade",
+    subtitle = "Maior concentração de usuárias no perfil Sedentário",
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal(base_size = 12)+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+
+Insightsr
+
+A maioria da base apresenta perfil sedentário ou pouco ativo.
+
+O público possui alto potencial de engajamento com metas de atividade.
+
+O app pode atuar como ferramenta de mudança de comportamento.
+
+
+## Tabela auxíliar de percentual 
+```{r}
+df_metric_percent_perfil_usuarios %>%
+  select(
+    perfil_usuario,
+    percentual
+  )
+```
+
+
+## Distribuição percentual de usuárias por classificação de peso
+```{r}
+ggplot(
+  df_metric_percent_imc,
+  aes(
+    x = "",
+    y = percentual,
+    fill = reorder(classificacao, -percentual)
+  )) +
+  geom_col(width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  geom_text(
+    aes(label = paste0(percentual, "%")),
+    position = position_stack(vjust = 0.5),
+    size = 4,
+    color = "white"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "#D4D32B",  
+      "#006592",  
+      "#e35c1c"
+    )
+  ) +
+  labs(
+    title = "Distribuição Percentual de Usuárias por Classificação de Peso",
+    subtitle = "Usuárias com Sobrepeso representam a maior parcela da base",
+    fill = NULL
+  ) +
+  theme_void(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+```
+Insights
+
+Apenas 37% do total de usuárias(35) da base inseriu informações sobre seu peso no app.
+
+69% das 13 usuárias analisadas está acima do peso ideal.
+
+O público apresenta forte demanda por soluções de saúde e controle de peso.
+
+Existe alta oportunidade de retenção via metas personalizadas.
+
+## Tabela auxíliar de qtd
+```{r}
+df_metric_percent_imc %>%
+  select(
+    classificacao,
+    total_usuarios
+  )
+```
+
+
+## Distribuição de Usuárias por Dias Ativos no App
+```{r}
+df_metric_dias_ativos_por_usuario %>%
+  select(
+    dias_ativos_usuario
+  ) %>%
+  summary()
+```
+
+```{r}
+ggplot(df_metric_dias_ativos_faixa, 
+  aes(
+    x = reorder(faixa_dias, -n), 
+    y = n,
+    fill = faixa_dias == "Médio engajamento"
+  )) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = n), vjust = -0.4, size = 4) +
+  scale_fill_manual(
+    values = c("TRUE" = "#006592", "FALSE" = "grey70"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Distribuição de Usuárias por Dias Ativos no App",
+    subtitle = "Maior concentração de usuárias com Engajamento Médio",
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal(base_size = 12)+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+
+Insights
+
+A maioria das usuárias apresenta engajamento médio (54%).
+
+Apenas 20% possuem alto nível de utilização.
+
+Existe espaço para evolução da base ativa.
+
+26% da base apresenta baixo engajamento.
+
+Risco potencial de churn (abandono do app).
+
+
+## Top 5 Usuárias com Maior número de Passos
+```{r}
+ggplot(df_metric_top_5_total_passos, 
+  aes(
+    x = reorder(id_usuario, total_passos), 
+    y = total_passos,
+    fill = id_usuario == "8877689391"
+  )) +
+  geom_col(width = 0.6) +
+  geom_text(
+    aes(label = scales::label_number(big.mark = ".", decimal.mark = ",")(total_passos)),
+    hjust = -0.2
+  ) +
+  coord_flip() +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_fill_manual(
+    values = c("TRUE" = "#006592", "FALSE" = "grey70"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Top 5 Usuárias com Maior número de Passos",
+    x = "Usuária",
+    y = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    
+  )
+```
+
+
+## Top 5 Usuárias com Menor número de Passos
+```{r}
+ggplot(df_metric_top_5_menor_total_passos, 
+  aes(
+    x = reorder(id_usuario, -total_passos), 
+    y = total_passos,
+    fill = id_usuario == "2891001357"
+  )) +
+  geom_col(width = 0.6) +
+  geom_text(
+    aes(label = scales::label_number(big.mark = ".", decimal.mark = ",")(total_passos)),
+    hjust = -0.2
+  ) +
+  coord_flip() +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_fill_manual(
+    values = c("TRUE" = "#E74C3C", "FALSE" = "grey70"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Top 5 Usuárias com Menor número de Passos",
+    subtitle = NULL,
+    x = "Usuária",
+    y = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+    )
+```
+Insights
+
+A diferença entre a usuária mais ativa e a menos ativa ultrapassa 100 vezes.
+
+Indica presença de perfis comportamentais muito distintos.
+
+Possível necessidade de segmentação da base de usuárias.
+
+
+## Analises de Correlações
+
+## Passos vs Calorias
+```{r}
+ggplot(
+  df_metric_media_atividade,
+  aes(
+    x = media_passos_dia, 
+    y = media_calorias_dia
+  )) +
+  geom_point(
+    color = "#2C3E50",
+    size = 2.5,
+    alpha = 0.7
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "#E74C3C",
+    linewidth = 1
+  ) +
+  labs(
+    title = "Relação entre Passos e Gasto Calórico",
+    subtitle = "Correlação de Pearson (r = 0.43)",
+    x = "Média de Passos por Dia",
+    y = "Média Calorias por Dia"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+  )
+```
+
+Insights
+
+Aumento de passos tende a elevar o gasto calórico.
+
+Relação consistente, porém não determinística.
+
+```{r}
+cor(
+  df_metric_media_atividade$media_passos_dia,
+  df_metric_media_atividade$media_calorias_dia,
+  use = "complete.obs"
+)
+```
+A correlação de 0.43 indica uma relação positiva moderada entre média de passos dia e gasto calórico dia.
+
+
+## Atividade Física vs Calorias
+```{r}
+ggplot(
+  df_metric_media_atividade,
+  aes(
+    x = media_minu_ativo_dia, 
+    y = media_calorias_dia
+  )) +
+  geom_point(
+    color = "#2C3E50",
+    size = 2.5,
+    alpha = 0.7
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "#E74C3C",
+    linewidth = 1
+  ) +
+  labs(
+    title = "Relação entre Atividade Física e Gasto Calorico",
+    subtitle = "Correlação de Pearson (r = 0.63)",
+    x = "Média Minutos de Atividade por Dia",
+    y = "Média Calorias por Dia"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+  )
+```
+
+Insights
+
+Minutos de atividade apresentam forte relação com gasto calórico.
+
+Relação mais intensa do que passos vs calorias.
+
+```{r}
+cor(
+  df_metric_media_atividade$media_minu_ativo_dia,
+  df_metric_media_atividade$media_calorias_dia,
+  use = "complete.obs"
+)
+```
+A correlação de 0.63 indica uma relação positiva significativa entre tempo médio de atividade física e gasto calórico diário.
+
+
+## Intensidade vs Calorias
+```{r}
+ggplot(
+  df_metric_calorias_intensidade,
+  aes(
+    x = media_intensidade, 
+    y = media_calorias_h
+  )) +
+  geom_point(
+    color = "#2C3E50",
+    size = 2.5,
+    alpha = 0.7
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "#E74C3C",
+    linewidth = 1
+  ) +
+  labs(
+    title = "Relação entre Intensidade e Gasto Calórico",
+    subtitle = "Correlação de Pearson (r = 0.51)",
+    x = "Média Intensidade por Hora",
+    y = "Média Calorias por Hora"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+  )
+```
+
+Insights
+
+Intensidade impacta o gasto calórico.
+
+Relação mais forte que passos, porém inferior a minutos ativos.
+
+```{r}
+cor(
+  df_metric_calorias_intensidade$media_calorias_h,
+  df_metric_calorias_intensidade$media_intensidade,
+  use = "complete.obs"
+)
+```
+A correlação de 0.51 indica uma relação positiva moderada entre entre intensidade média e gasto calórico.
+
+
+## Atividade Física vs Sono
+```{r}
+ggplot(
+  df_metric_sono_minut_ativo,
+  aes(
+    x = media_minu_ativo_dia, 
+    y = media_hora_sono
+  )) +
+  geom_point(
+    color = "#2C3E50",
+    size = 2.5,
+    alpha = 0.7
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "#E74C3C",
+    linewidth = 1
+  ) +
+  labs(
+    title = "Relação entre Atividade Física e Horas de Sono",
+    subtitle = "Correlação de Pearson (r = -0.085)",
+    x = "Média Minutos de Atividade por Dia",
+    y = "Média Horas de sono por Dia"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+  )
+```
+
+Insights
+
+Sono parece depender de outros fatores comportamentais.
+
+```{r}
+cor(
+  df_metric_sono_minut_ativo$media_minu_ativo_dia,
+  df_metric_sono_minut_ativo$media_hora_sono
+)
+```
+Correlação negativa muito fraca (r = -0.085). Não foi observada relação linear relevante entre atividade física e horas de sono.
+
+
+## Distribuição de Usuárias por Classificação da qualidade do Sono
+```{r}
+ggplot(
+  df_metric_classificacao_do_sono, 
+  aes(
+    x = reorder(faixa_sono, -n), 
+    y = n,
+    fill = faixa_sono == "Sono adequado"
+  ))+
+  geom_col()+
+  geom_text(aes(label = n), vjust = -0.4, size = 4)+
+  scale_fill_manual(
+    values = c("TRUE" = "#006592", "FALSE" = "grey70"),
+    guide = "none"
+  )+
+  labs(
+    title = "Distribuição de Usuárias por Classificação da qualidade do Sono",
+    subtitle = "Maior concentração de usuárias categorizadas com Sono adequado",
+    x = NULL,
+    y = NULL
+  )+
+  theme_minimal(base_size = 12)+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+Insights
+
+54% das usuárias apresentam sono adequado.
+
+29% demonstram padrões irregulares (curto, insuficiente ou prolongado).
+
+Indica oportunidade para estratégias focadas em melhoria da qualidade do sono.
+
+
+# LIMITAÇÕES DOS DADOS ----
+
+A análise das funcionalidades relacionadas ao registro de sono e peso foi impactada por ausência parcial de dados. A funcionalidade de sono contou com 24 usuárias analisadas (69% da base), enquanto a funcionalidade de peso apresentou apenas 13 usuárias com registros válidos (37% da base).
+
+Essa diferença de cobertura pode introduzir viés de autoseleção, uma vez que usuárias que optam por registrar peso ou sono podem apresentar perfis comportamentais distintos da base total, limitando a generalização dos resultados.
+
+# PRINCIPAIS INSIGHTS ----
+
+1. Apenas 37% do total de usuárias(35) da base inseriu informações sobre seu peso no app.
+
+2. Engajamento médio predominante.
+
+3. Mais minutos de atividade apresentam forte relação com gasto calórico.
+
+4. Não foi observada relação linear relevante entre atividade física e horas de sono.
+
+5. Forte heterogeneidade comportamental.
+
+
+# RECOMENDAÇÕES FINAIS ----
+
+Estratégia Central: 
+
+A personalização baseada em comportamento pode aumentar retenção da faixa de usuárias com médio engajamento e reduzir risco de churn nos 26% de baixo engajamento.
+
+Engajamento Ativo: 
+
+Implementar notificações que informem as usuárias que sua quantidade de passos ao longo do dia está abaixo da média recomendada.
+
+Ampliação de Dados de Saúde: 
+
+Incentivar o registro de peso por meio de comunicação educativa, destacando a importância do acompanhamento para metas personalizadas.
+
+Expandir o ecossistema do app com módulo educacional focado em nutrição e controle calórico.
+
+
+
+
