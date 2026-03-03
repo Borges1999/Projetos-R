@@ -49,3 +49,35 @@ Responder questões estratégicas como:
 - R
 - Pacotes(tidyverse, dplyr, ggplot2, readr e lubridate)
 - RStudio
+
+---
+
+## 🚀 COMO REPRODUZIR AS ANÁLISES
+
+Siga os passos abaixo para executar o projeto em seu ambiente local:
+
+1. **Baixe ou clone o repositório** para o seu computador:
+   - Se for baixar: clique em `Code` > `Download ZIP` e extraia os arquivos.
+   - Se for clonar via Git:
+     ```bash
+     git clone https://github.com/seu-usuario/seu-repositorio.git
+     ```
+     
+2. **Abrir no RStudio**
+
+- Abra o **RStudio**
+- Vá em **File > Open File**
+- Selecione os arquivos **bellabeat_script.R** e **projeto_bellabeat.R**
+
+3. **Executar as análises**
+   
+- Execute as etapas na ordem apresentada no projeto:
+  1. Pacotes
+  2. Importação
+  3. Tratamento dos dados
+  4. Análise Exploratória
+  5. Análise Estatística Descritiva
+  6. Métricas
+  7. Visualizações
+
+**Obs.:** Caso não consiga reproduzir, talvez precise setar de forma manual o caminho da pasta onde os arquivos se encontram, para isso use a função set("caminho_dos_arquivos") no console R.
